@@ -1,0 +1,17 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:////PointingToDeclaration/-kache-controller/[root]/index.html
+$dokka.location:/KacheController///PointingToDeclaration/-kache-controller/[root]/-kache-controller/index.html
+$dokka.location:/KacheController/KacheController/#kotlin.Function0[kotlin.Boolean]#io.lettuce.core.api.sync.RedisCommands[kotlin.String,kotlin.String]/PointingToDeclaration/-kache-controller/[root]/-kache-controller/-kache-controller.html
+$dokka.location:/KacheController/cacheDel/#kotlin.String#com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])]#kotlin.coroutines.SuspendFunction1[com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])],kotlin.Boolean]/PointingToDeclaration/-kache-controller/[root]/-kache-controller/cache-del.html
+$dokka.location:/KacheController/cacheEnabled/#/PointingToDeclaration/-kache-controller/[root]/-kache-controller/cache-enabled.html
+$dokka.location:/KacheController/get/#kotlin.String#com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])]#kotlinx.serialization.KSerializer[TypeParam(bounds=[Model])]#kotlin.coroutines.SuspendFunction1[com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])],TypeParam(bounds=[Model])?]/PointingToDeclaration/-kache-controller/[root]/-kache-controller/get.html
+$dokka.location:/KacheController/getAll/#com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])]#kotlinx.serialization.KSerializer[TypeParam(bounds=[Model])]#kotlin.String#kotlin.coroutines.SuspendFunction1[com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])],kotlin.collections.List[TypeParam(bounds=[Model])]]/PointingToDeclaration/-kache-controller/[root]/-kache-controller/get-all.html
+$dokka.location:/KacheController/getVolatile/#kotlin.String#com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])]#kotlinx.serialization.KSerializer[TypeParam(bounds=[kotlin.Any])]#kotlin.coroutines.SuspendFunction1[com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])],TypeParam(bounds=[kotlin.Any])]/PointingToDeclaration/-kache-controller/[root]/-kache-controller/get-volatile.html
+$dokka.location:/KacheController/set/#com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])]#kotlinx.serialization.KSerializer[TypeParam(bounds=[Model])]#kotlin.coroutines.SuspendFunction1[com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])],TypeParam(bounds=[Model])?]/PointingToDeclaration/-kache-controller/[root]/-kache-controller/set.html
+$dokka.location:/KacheController/setAll/#com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])]#kotlinx.serialization.KSerializer[TypeParam(bounds=[Model])]#kotlin.String#kotlin.coroutines.SuspendFunction1[com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])],kotlin.collections.List[TypeParam(bounds=[Model])]?]/PointingToDeclaration/-kache-controller/[root]/-kache-controller/set-all.html
+$dokka.location:/KacheController/volatileCashKey/com.mongodb.kotlin.client.coroutine.MongoCollection[TypeParam(bounds=[Model])]#/PointingToDeclaration/-kache-controller/[root]/-kache-controller/volatile-cash-key.html
+$dokka.location:/Model///PointingToDeclaration/-kache-controller/[root]/-model/index.html
+$dokka.location:/Model/id/#/PointingToDeclaration/-kache-controller/[root]/-model/id.html
+
+
