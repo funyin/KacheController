@@ -5,7 +5,9 @@ import Model
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoClient
+import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.RedisClient
+import io.lettuce.core.api.coroutines
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.SerialName
@@ -13,14 +15,15 @@ import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 
 
+@OptIn(ExperimentalLettuceCoroutinesApi::class)
 suspend fun main(args: Array<String>) {
     val mongoClient = MongoClient.create("mongodb://localhost:27016")
     val redisClient = RedisClient.create("redis://127.0.0.1:6379")
     val connection = redisClient.connect()
-    val syncCommands = connection.sync()
+    val coroutinesCommands = connection.coroutines()
     val controller = KacheController(
         cacheEnabled = { true },
-        client = syncCommands,
+        client = coroutinesCommands,
     )
 
     val db = mongoClient.getDatabase("kacheController")

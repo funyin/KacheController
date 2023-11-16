@@ -1,5 +1,7 @@
 import com.mongodb.kotlin.client.coroutine.MongoCollection
-import io.lettuce.core.api.sync.RedisCommands
+import io.lettuce.core.ExperimentalLettuceCoroutinesApi
+import io.lettuce.core.api.coroutines.RedisCoroutinesCommands
+import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
@@ -8,9 +10,11 @@ import org.slf4j.LoggerFactory
  * @property cacheEnabled will be checked before checking cache,
  * you can change this to false at anytime if you don't want to hit the cache
  */
-class KacheController(
+
+@OptIn(ExperimentalLettuceCoroutinesApi::class)
+class KacheController (
     val cacheEnabled: () -> Boolean,
-    private val client: RedisCommands<String, String>,
+    private val client: RedisCoroutinesCommands<String, String>,
 ) {
 
     private val logger = LoggerFactory.getLogger("CacheController")
@@ -47,6 +51,7 @@ class KacheController(
      * Get the items from the list if they exist else perform the real query
      * update the cache and return the results
      */
+
     suspend fun <T : Model> getAll(
         collection: MongoCollection<T>,
         serializer: KSerializer<T>,
@@ -55,7 +60,7 @@ class KacheController(
     ): List<T> {
         if (!cacheEnabled())
             return getData(collection)
-        val data = client.hvals(cacheKey)
+        val data = client.hvals(cacheKey).toList()
         return if (data.isNotEmpty()) {
             logger.info("CACHE HIT getAll $cacheKey")
             data.map { Json.decodeFromString(serializer, it) }
@@ -190,7 +195,7 @@ class KacheController(
 
     fun <T : Model> MongoCollection<T>.volatileCashKey() = "${namespace.collectionName}:volatile"
 
-    private fun <T : Model> clearVolatile(collection: MongoCollection<T>) {
+    private suspend fun <T : Model> clearVolatile(collection: MongoCollection<T>) {
         client.del(collection.volatileCashKey())
         logger.info("CACHE CLEAR VOLATILE ${collection.volatileCashKey()}")
     }
