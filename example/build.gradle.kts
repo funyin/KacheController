@@ -26,7 +26,6 @@ dependencies {
     implementation("io.lettuce:lettuce-core:6.2.2.RELEASE")
     implementation(project(mapOf("path" to ":")))
     testImplementation(kotlin("test"))
-    implementation(project(":"))
 }
 
 

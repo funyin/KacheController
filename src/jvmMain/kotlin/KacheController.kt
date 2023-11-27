@@ -12,12 +12,12 @@ import org.slf4j.LoggerFactory
  */
 
 @OptIn(ExperimentalLettuceCoroutinesApi::class)
-class KacheController (
-    val cacheEnabled: () -> Boolean,
+class KacheController(
+    val cacheEnabled: () -> Boolean = { true },
     private val client: RedisCoroutinesCommands<String, String>,
 ) {
 
-    private val logger = LoggerFactory.getLogger("CacheController")
+    private val logger = LoggerFactory.getLogger("KacheController")
 
     /**
      * Get A single item from your db or cache </br>
@@ -35,7 +35,7 @@ class KacheController (
         getData: suspend MongoCollection<T>.() -> T?,
     ): T? {
         if (!cacheEnabled()) return getData(collection)
-        val cacheKey by lazy { collection.namespace.collectionName }
+        val cacheKey = collection.cacheKey()
         val data = client.hget(cacheKey, id)
         return if (data != null) {
             logger.info("CACHE HIT get $cacheKey")
@@ -55,7 +55,7 @@ class KacheController (
     suspend fun <T : Model> getAll(
         collection: MongoCollection<T>,
         serializer: KSerializer<T>,
-        cacheKey: String = collection.namespace.collectionName,
+        cacheKey: String = collection.cacheKey(),
         getData: suspend MongoCollection<T>.() -> List<T>,
     ): List<T> {
         if (!cacheEnabled())
@@ -82,7 +82,7 @@ class KacheController (
         setData: suspend MongoCollection<T>.() -> T?,
     ): T? {
         if (!cacheEnabled()) return setData(collection)
-        val cacheKey by lazy { collection.namespace.collectionName }
+        val cacheKey = collection.cacheKey()
         val realData = setData(collection)
         return if (realData != null) {
             val modelId = realData.id
@@ -116,7 +116,7 @@ class KacheController (
     suspend fun <T : Model> setAll(
         collection: MongoCollection<T>,
         serializer: KSerializer<T>,
-        cacheKey: String = collection.namespace.collectionName,
+        cacheKey: String = collection.cacheKey(),
         setData: suspend MongoCollection<T>.() -> List<T>?,
     ): Boolean {
         if (!cacheEnabled()) return setData(collection) != null
@@ -193,7 +193,8 @@ class KacheController (
         }
     }
 
-    fun <T : Model> MongoCollection<T>.volatileCashKey() = "${namespace.collectionName}:volatile"
+    fun <T : Model> MongoCollection<T>.volatileCashKey() = "${cacheKey()}:volatile"
+    fun <T : Model> MongoCollection<T>.cacheKey() = "${namespace.databaseName}:${namespace.collectionName}"
 
     private suspend fun <T : Model> clearVolatile(collection: MongoCollection<T>) {
         client.del(collection.volatileCashKey())
@@ -204,14 +205,44 @@ class KacheController (
      * Delete an item from your db, if that was successful return [true] or [false]
      * if [true] the item is also deleted from the cache
      */
-    suspend fun <T : Model> cacheDel(
+    suspend fun <T : Model> remove(
         id: String, collection: MongoCollection<T>, deleteData: suspend MongoCollection<T>.() -> Boolean,
     ): Boolean {
         if (!cacheEnabled())
             return deleteData(collection)
-        val cacheKey by lazy { collection.namespace.collectionName }
+        val cacheKey = collection.cacheKey()
         return if (deleteData(collection)) {
-            client.hdel(cacheKey, id)
+            val response = client.hdel(cacheKey, id)
+            logger.info("CACHE DROP remove $cacheKey - $response")
+            true
+        } else
+            false
+    }
+
+    /**
+     * Delete all the items in a collection, if that was successful return [true] or [false]
+     * if [true] all the items in the cache will also be deleted
+     * e.g
+     * ```kotlin
+     *kacheController.removeAll(collection) {
+     *    collection.deleteMany(Filters.empty()).deletedCount > 0
+     *}
+     * ```
+     * ensure that you use the delete count instead of `wasAcknowledged()` because that will still be true when
+     * no items are deleted
+     */
+    suspend fun <T : Model> removeAll(
+        collection: MongoCollection<T>, deleteData: suspend MongoCollection<T>.() -> Boolean,
+    ): Boolean {
+        if (!cacheEnabled())
+            return deleteData(collection)
+        val cacheKey = collection.cacheKey()
+        return if (deleteData(collection)) {
+            val fields = client.hkeys(cacheKey).toList().toTypedArray()
+            if (fields.isNotEmpty()) {
+                val response = client.hdel(cacheKey, *fields)
+                logger.info("CACHE SET removeAll $cacheKey - $response")
+            }
             true
         } else
             false

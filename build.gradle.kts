@@ -3,6 +3,7 @@ plugins {
     kotlin("plugin.serialization") version "1.9.0"
     id("org.jetbrains.dokka") version "1.9.10"
     `maven-publish`
+    `signing`
 }
 
 group = "com.funyinkash"
@@ -14,6 +15,7 @@ repositories {
 
 kotlin {
 
+
     jvm {
         jvmToolchain(17)
         withJava()
@@ -22,7 +24,7 @@ kotlin {
         }
     }
     sourceSets {
-        val jvmMain by getting{
+        val jvmMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
                 implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.1")
@@ -40,42 +42,48 @@ kotlin {
 }
 
 publishing {
-    /*publications {
+    publications {
         create<MavenPublication>("maven") {
-            *//*groupId = "com.funyinkash"
+            groupId = "com.funyinkash"
             artifactId = "KacheController"
             version = "1.1"
 
-            from(components["java"])*//*
+            from(components["java"])
 
-            *//*pom {
-                name = "My Library"
-                description = "A concise description of my library"
-                url = "http://www.example.com/library"
-                properties = mapOf(
-                    "myProp" to "value",
-                    "prop.with.dots" to "anotherValue"
+            pom {
+                name.set("KacheController")
+                description.set("A Kotlin Library that allows performing caching and database write operations in a single operation")
+                url.set("https://github.com/funyin/KacheController")
+                issueManagement {
+                    system.set("Github")
+                    url.set("https://github.com/funyin/KacheController/issues")
+                }
+                properties.set(
+                    mapOf(
+                        "myProp" to "value",
+                        "prop.with.dots" to "anotherValue"
+                    )
                 )
                 licenses {
                     license {
-                        name = "The Apache License, Version 2.0"
-                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
                     }
                 }
                 developers {
                     developer {
-                        id = "johnd"
-                        name = "John Doe"
-                        email = "john.doe@example.com"
+                        id.set("funyin")
+                        name.set("Funyinoluwa Kashimawo")
+                        email.set("funyin.kash@gmail.com")
                     }
                 }
                 scm {
-                    connection = "scm:git:git://example.com/my-library.git"
-                    developerConnection = "scm:git:ssh://example.com/my-library.git"
-                    url = "http://example.com/my-library/"
+                    connection.set("scm:git:git://github.com/funyin/KacheController.git")
+                    developerConnection.set("scm:git:ssh://github.com/funyin/KacheController.git")
+                    url.set("https://github.com/funyin/KacheController")
                 }
-            }*//*
+            }
         }
-    }*/
+    }
 }
 
