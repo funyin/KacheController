@@ -1,7 +1,7 @@
 package example
 
-import KacheController
-import Model
+import com.funyinkash.kachecontroller.KacheController
+import com.funyinkash.kachecontroller.Model
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoClient
@@ -17,7 +17,7 @@ import org.bson.types.ObjectId
 
 @OptIn(ExperimentalLettuceCoroutinesApi::class)
 suspend fun main(args: Array<String>) {
-    val mongoClient = MongoClient.create("mongodb://localhost:27016")
+    val mongoClient = MongoClient.create("mongodb://localhost:27017")
     val redisClient = RedisClient.create("redis://127.0.0.1:6379")
     val connection = redisClient.connect()
     val coroutinesCommands = connection.coroutines()

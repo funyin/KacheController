@@ -1,3 +1,5 @@
+package com.funyinkash.kachecontroller
+
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.api.coroutines.RedisCoroutinesCommands
