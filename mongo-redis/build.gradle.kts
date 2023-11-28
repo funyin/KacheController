@@ -30,11 +30,18 @@ dependencies {
 }
 
 group = "com.funyinkash.kachecontroller"
-version = "1.0-SNAPSHOT"
+//version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 
 tasks.dokkaHtml {
     outputDirectory.set(buildDir.resolve("../docs"))
+}
+
+tasks.jar {
+    enabled = true
+    // Remove `plain` postfix from jar file name
+    archiveClassifier.set("")
 }
 
 publishing {
@@ -45,6 +52,12 @@ publishing {
         from("docs")
     }
 
+//    val sourcesJar = tasks.register<Jar>("sourcesJar") {
+//        dependsOn(tasks.classes)
+//        archiveClassifier.set("sources")
+//        from(sourceSets.main)
+//    }
+
 
     publications {
         create<MavenPublication>("maven") {
@@ -54,6 +67,7 @@ publishing {
 
             from(components["kotlin"])
             artifact(javaDocJar)
+            artifact(tasks.kotlinSourcesJar)
 
             pom {
                 name.set("mongo-redis")
@@ -90,7 +104,6 @@ publishing {
         maven {
             name = "OSSHR"
 //            url = layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
-
 //            publications.withType<MavenPublication>()["maven"].version
 
             val isSnapshot = version.toString().endsWith("SNAPSHOT")
