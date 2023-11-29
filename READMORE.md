@@ -1,6 +1,6 @@
 ## KacheController
 A simple controller to add a caching layer on top of a database operations.
-So you can perform database actions with one functions without the boiler plate of the caching layer.
+So you can perform database actions with one function without the boiler plate of the caching layer.
 
 ### Use cases
 There are diferent use cases for KacheController i.e

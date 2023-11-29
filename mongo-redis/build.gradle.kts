@@ -70,7 +70,7 @@ publishing {
             pom {
                 name.set("KacheController")
                 description.set("A simple controller to add a caching layer on top of a database operations.\n" +
-                        "So you can perform database actions with one functions without the boiler plate of the caching layer.\n" +
+                        "So you can perform database actions with one function without the boiler plate of the caching layer.\n" +
                         "This is the mongo-redis use cases")
                 url.set("https://github.com/funyin/KacheController")
                 issueManagement {
