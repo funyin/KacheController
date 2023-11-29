@@ -1,1 +1,1 @@
-sourceset_dependencies='{":dokkaHtml/commonMain":[],":dokkaHtml/jvmMain":[":dokkaHtml/commonMain"]}'
+sourceset_dependencies = '{":mongo-redis:dokkaHtmlPartial/main":[]}'

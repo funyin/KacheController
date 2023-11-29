@@ -22,8 +22,10 @@ suspend fun main(args: Array<String>) {
     val connection = redisClient.connect()
     val coroutinesCommands = connection.coroutines()
     val controller = KacheController(
-        cacheEnabled = { true },
-        client = coroutinesCommands,
+        cacheEnabled = {
+            true
+        },
+        client = coroutinesCommands
     )
 
     val db = mongoClient.getDatabase("kacheController")
@@ -40,8 +42,8 @@ suspend fun main(args: Array<String>) {
         else
             emptyList()
     }
-    controller.getAll(usersCollection, User.serializer()) {
-        find().toList()
+    controller.getAll(usersCollection, User.serializer(), cacheKey = "all:firsName:Funyin") {
+        find(Filters.eq(User::firstName.name, "Funyin")).toList()
     }.also {
         println(it)
     }
@@ -58,6 +60,19 @@ suspend fun main(args: Array<String>) {
         find(Filters.eq(User::id.name, users.first().id)).firstOrNull()
     }.also {
         println(it)
+    }
+
+    controller.remove(users.first().id, usersCollection) {
+        deleteOne(Filters.eq("_id", users.first().id)).wasAcknowledged()
+    }
+    controller.removeAll(usersCollection) {
+        deleteMany(
+            Filters.or(
+                users.map {
+                    Filters.eq("_id", it.id)
+                }
+            )
+        ).wasAcknowledged()
     }
 
 }

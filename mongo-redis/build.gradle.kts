@@ -1,3 +1,4 @@
+
 plugins {
     `java-library`
     kotlin("jvm") version "1.9.0"
@@ -34,22 +35,19 @@ group = "com.funyinkash.kachecontroller"
 version = "1.0.0"
 
 
-tasks.dokkaHtml {
-    outputDirectory.set(buildDir.resolve("../docs"))
-}
-
-tasks.jar {
-    enabled = true
-    // Remove `plain` postfix from jar file name
-    archiveClassifier.set("")
-}
+//tasks.dokkaHtml {
+//    outputDirectory.set(buildDir.resolve("../docs"))
+//}
+//tasks.dokkaGfm{
+//    outputDirectory.set(buildDir.resolve("../docs"))
+//}
 
 publishing {
 
     val javaDocJar = tasks.register<Jar>("javadocJar") {
-        dependsOn(tasks.dokkaHtml)
+        dependsOn(tasks.dokkaHtmlPartial)
         archiveClassifier.set("javadoc")
-        from("docs")
+        from("../docs/mongo-redis")
     }
 
 //    val sourcesJar = tasks.register<Jar>("sourcesJar") {
@@ -70,8 +68,10 @@ publishing {
             artifact(tasks.kotlinSourcesJar)
 
             pom {
-                name.set("mongo-redis")
-                description.set("A Kotlin Library that allows performing caching and database write operations in a single operation")
+                name.set("KacheController")
+                description.set("A simple controller to add a caching layer on top of a database operations.\n" +
+                        "So you can perform database actions with one functions without the boiler plate of the caching layer.\n" +
+                        "This is the mongo-redis use cases")
                 url.set("https://github.com/funyin/KacheController")
                 issueManagement {
                     system.set("Github")
