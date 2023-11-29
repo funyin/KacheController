@@ -32,7 +32,7 @@ dependencies {
 
 group = "com.funyinkash.kachecontroller"
 //version = "1.0-SNAPSHOT"
-version = "1.0.0"
+version = "1.0.1"
 
 
 //tasks.dokkaHtml {
@@ -72,7 +72,7 @@ publishing {
                 description.set("A simple controller to add a caching layer on top of a database operations.\n" +
                         "So you can perform database actions with one function without the boiler plate of the caching layer.\n" +
                         "This is the mongo-redis use cases")
-                url.set("https://github.com/funyin/KacheController")
+                url.set("https://funyin.github.io/KacheController/mongo-redis/index.html")
                 issueManagement {
                     system.set("Github")
                     url.set("https://github.com/funyin/KacheController/issues")
