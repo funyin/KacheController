@@ -1,3 +1,6 @@
+![Maven Central](https://img.shields.io/maven-central/v/com.funyinkash.kachecontroller/mongo-redis)
+
+
 The mongo-redis use case makes use of
 - **[lettuce](https://lettuce.io/)** for redis and
 - **[mongodb kotlin driver](https://www.mongodb.com/docs/drivers/kotlin/coroutine/current/)** for the database

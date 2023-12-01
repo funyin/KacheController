@@ -1,3 +1,6 @@
+![Maven Central](https://img.shields.io/maven-central/v/com.funyinkash.kachecontroller/mongo-redis)
+
+
 ## KacheController
 A simple controller to add a caching layer on top of a database operations.
 So you can perform database actions with one function without the boiler plate of the caching layer.
