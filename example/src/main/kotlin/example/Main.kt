@@ -48,7 +48,7 @@ suspend fun main(args: Array<String>) {
         println(it)
     }
 
-    controller.set(usersCollection, User.serializer()) {
+    controller.set(usersCollection, serializer = User.serializer()) {
         findOneAndUpdate(
             Filters.eq("_id", users.first().id),
             Updates.set(User::firstName.name, "NewNameFirst")

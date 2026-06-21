@@ -1,5 +1,5 @@
 package com.funyinkash.kachecontroller
 
-interface Model{
+interface Model {
     val id: String
 }
