@@ -39,12 +39,16 @@ kotlin {
     }
 }
 
-group = "com.funyinkash.kachecontroller"
-version = "1.0.3"
+group = "com.funyinkash"
+version = "1.0.5"
 
 publishing {
     publications.withType<MavenPublication>().configureEach {
         val pubName = name
+        artifactId = when (pubName) {
+            "kotlinMultiplatform" -> "kachecontroller-mongo-redis"
+            else -> "kachecontroller-mongo-redis-$pubName"
+        }
         val javadocJar = tasks.register<Jar>("${pubName}JavadocJar") {
             dependsOn(tasks.dokkaHtmlPartial)
             archiveClassifier.set("javadoc")
