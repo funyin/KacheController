@@ -72,7 +72,7 @@ suspend fun main(args: Array<String>) {
                     Filters.eq("_id", it.id)
                 }
             )
-        ).wasAcknowledged()
+        ).deletedCount > 0
     }
 
 }

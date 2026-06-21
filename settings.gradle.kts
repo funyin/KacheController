@@ -12,5 +12,4 @@ plugins {
 
 rootProject.name = "KacheController"
 include(":example")
-include(":core")
 include(":mongo-redis")

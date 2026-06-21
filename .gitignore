@@ -43,3 +43,4 @@ bin/
 gradle.properties
 secring.gpg
 secret-key.ascii
+local.properties

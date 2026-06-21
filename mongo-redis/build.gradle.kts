@@ -1,13 +1,11 @@
-
 plugins {
     `java-library`
     kotlin("jvm") version "1.9.0"
-
-
     kotlin("plugin.serialization") version "1.9.0"
     id("org.jetbrains.dokka") version "1.9.10"
     `maven-publish`
     signing
+    id("com.gradleup.nmcp") version "0.0.9"
 }
 
 repositories {
@@ -31,37 +29,18 @@ dependencies {
 }
 
 group = "com.funyinkash.kachecontroller"
-//version = "1.0-SNAPSHOT"
-version = "1.0.1"
-
-
-//tasks.dokkaHtml {
-//    outputDirectory.set(buildDir.resolve("../docs"))
-//}
-//tasks.dokkaGfm{
-//    outputDirectory.set(buildDir.resolve("../docs"))
-//}
+version = "1.0.3"
 
 publishing {
-
     val javaDocJar = tasks.register<Jar>("javadocJar") {
         dependsOn(tasks.dokkaHtmlPartial)
         archiveClassifier.set("javadoc")
         from("../docs/mongo-redis")
     }
 
-//    val sourcesJar = tasks.register<Jar>("sourcesJar") {
-//        dependsOn(tasks.classes)
-//        archiveClassifier.set("sources")
-//        from(sourceSets.main)
-//    }
-
-
     publications {
         create<MavenPublication>("maven") {
-//            groupId = "com.funyinkash.kachecontroller"
             artifactId = "mongo-redis"
-//            version = "1.0-SNAPSHOT"
 
             from(components["kotlin"])
             artifact(javaDocJar)
@@ -69,9 +48,11 @@ publishing {
 
             pom {
                 name.set("KacheController")
-                description.set("A simple controller to add a caching layer on top of a database operations.\n" +
-                        "So you can perform database actions with one function without the boiler plate of the caching layer.\n" +
-                        "This is the mongo-redis use cases")
+                description.set(
+                    "A simple controller to add a caching layer on top of a database operations.\n" +
+                    "So you can perform database actions with one function without the boiler plate of the caching layer.\n" +
+                    "This is the mongo-redis use cases"
+                )
                 url.set("https://funyin.github.io/KacheController/mongo-redis/index.html")
                 issueManagement {
                     system.set("Github")
@@ -99,34 +80,28 @@ publishing {
             }
         }
     }
+}
 
-    repositories {
-        maven {
-            name = "OSSHR"
-//            url = layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
-//            publications.withType<MavenPublication>()["maven"].version
-
-            val isSnapshot = version.toString().endsWith("SNAPSHOT")
-            url = uri(
-                if (isSnapshot)
-                    "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-                else
-                    "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-            )
-            credentials {
-                username = project.properties["osshr.username"].toString()
-                password = project.properties["osshr.password"].toString()
-            }
-        }
+nmcp {
+    publish("maven") {
+        username.set(providers.gradleProperty("osshr.username"))
+        password.set(providers.gradleProperty("osshr.password"))
+        // USER_MANAGED: uploaded to the Central Portal staging area for manual review and release.
+        // Change to "AUTOMATIC" to release without manual intervention.
+        publicationType.set("AUTOMATIC")
     }
 }
 
-
-signing {
-    val file = File("${projectDir.parent}/${project.properties["signing.secretKeyFile"]}")
-    useInMemoryPgpKeys(
-        file.readText(),
-        project.properties["signing.password"].toString(),
-    )
-    sign(publishing.publications["maven"])
+val signingKeyFilePath = findProperty("signing.secretKeyFile")?.toString()
+if (!signingKeyFilePath.isNullOrBlank()) {
+    val signingKeyFile = File("${projectDir.parent}/$signingKeyFilePath")
+    if (signingKeyFile.exists()) {
+        signing {
+            useInMemoryPgpKeys(
+                signingKeyFile.readText(),
+                findProperty("signing.password")?.toString() ?: "",
+            )
+            sign(publishing.publications["maven"])
+        }
+    }
 }
