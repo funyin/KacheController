@@ -1,16 +1,58 @@
-![Maven Central](https://img.shields.io/maven-central/v/com.funyinkash.kachecontroller/mongo-redis)
-
+![Maven Central](https://img.shields.io/maven-central/v/com.funyinkash.kachecontroller/kachecontroller-core)
 
 ## KacheController
-A simple controller to add a caching layer on top of database operations.
-So you can perform database actions with one function without the boilerplate of the caching layer.
 
-### Use cases
-There are different use cases for KacheController, i.e
-**database-cache** connections
-1. [mongo-redis](mongo-redis/README.md)
-2. [sql-redis](#)(Comming soon)
+A pluggable read-through/write-through cache layer for database operations.
+Swap any cache backend with any database adapter — no boilerplate.
 
-## Getting Started
-Typically, you just have to provide your database and cache drivers.
-Take a look at the docs for one of the use cases to get started
+### Modules
+
+| Module | Artifact | Purpose |
+|---|---|---|
+| `kachecontroller-core` | `kachecontroller-core` | Abstract `CacheClient` interface + `KacheController` base class |
+| `kachecontroller-cache-redis` | `kachecontroller-cache-redis` | Redis `CacheClient` via Lettuce |
+| `kachecontroller-cache-memory` | `kachecontroller-cache-memory` | In-memory `CacheClient` (no external deps) |
+| `kachecontroller-cache-sqlite` | `kachecontroller-cache-sqlite` | SQLite `CacheClient` via sqlite-jdbc |
+| `kachecontroller-mongo` | `kachecontroller-mongo` | `MongoKacheController` — MongoDB adapter |
+| `kachecontroller-postgres` | `kachecontroller-postgres` | `PostgresKacheController` — Exposed-based PostgreSQL |
+
+### Usage
+
+Pick one **cache** and one **database** adapter:
+
+```kotlin
+// Cache backends
+val memCache: CacheClient = InMemoryCacheClient()
+val sqliteCache: CacheClient = SQLiteCacheClient.create("jdbc:sqlite:kache.db")
+val redisCache: CacheClient = RedisCacheClient.create("redis://localhost:6379")
+
+// Database adapters
+val mongoCtrl = MongoKacheController(cache = redisCache)
+val pgCtrl    = PostgresKacheController(cache = redisCache)
+```
+
+Your models implement `Model` (`val id: String`) and use `kotlinx-serialization`:
+
+```kotlin
+@Serializable
+data class User(
+    @SerialName("_id")
+    override val id: String = ObjectId().toHexString(),
+    val firstName: String,
+    val lastName: String,
+) : Model
+```
+
+See the [example module](example/) for a complete runnable demo.
+
+### Design
+
+- **Cache keys:** `"<dbName>:<collectionName>"`; volatiles = `"$key:volatile"`.
+- **Custom `getAll` keys** are volatile — auto-invalidated on writes.
+- **Empty collections** store a `__kache_empty__` sentinel (filtered from results).
+- **`removeAll`** uses `DEL` (atomic), not `HKEYS`+`HDEL`.
+- **Write-behind** (`setAsync`/`setAllAsync`): fire-and-forget, not for transactional data.
+
+### License
+
+Apache 2.0

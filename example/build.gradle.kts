@@ -16,16 +16,15 @@ java {
 }
 
 dependencies {
-    // This dependency is used by the application.
-    implementation("com.google.guava:guava:31.1-jre")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.1")
-    implementation("org.mongodb:bson-kotlinx:4.11.1")
-    implementation("io.lettuce:lettuce-core:6.2.2.RELEASE")
-//    implementation(project(mapOf("path" to ":")))
-//    implementation(project(mapOf("path" to ":")))
-    implementation(project(mapOf("path" to ":mongo-redis")))
-    testImplementation(kotlin("test"))
+    implementation(project(":kachecontroller-mongo"))
+    implementation(project(":kachecontroller-cache-redis"))
+    implementation(project(":kachecontroller-cache-memory"))
+    implementation(project(":kachecontroller-cache-sqlite"))
+}
+
+application {
+    mainClass.set("MainKt")
 }
 
 

@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="kachecontroller-cache-redis-jvm-1.0.5">
+    <output-path>$PROJECT_DIR$/kachecontroller-cache-redis/build/libs</output-path>
+    <root id="archive" name="kachecontroller-cache-redis-jvm-1.0.5.jar">
+      <element id="module-output" name="KacheController.kachecontroller-cache-redis.jvmMain" />
+    </root>
+  </artifact>
+</component>

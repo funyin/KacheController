@@ -14,4 +14,9 @@ plugins {
 
 rootProject.name = "KacheController"
 include(":example")
-include(":mongo-redis")
+include(":kachecontroller-core")
+include(":kachecontroller-cache-redis")
+include(":kachecontroller-cache-memory")
+include(":kachecontroller-cache-sqlite")
+include(":kachecontroller-mongo")
+include(":kachecontroller-postgres")
