@@ -11,6 +11,7 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -88,30 +89,59 @@ class KacheController(
      * Get the items from the list if they exist else perform the real query
      * update the cache and return the results.
      *
-     * Note: when a custom [cacheKey] is provided the cached results are stored as a regular hash
-     * and are NOT automatically invalidated by [set] or [setAll]. Use [getVolatile] instead for
-     * filtered queries whose results must stay consistent with writes.
+     * When [cacheKey] matches the default (the collection name) the results are stored as a
+     * standard per-document hash, which [set]/[setAll] update automatically.  When a custom
+     * [cacheKey] is provided the result is stored inside the collection's volatile hash so that
+     * any subsequent write to the collection (via [set], [setAll], [remove], [removeAll]) clears
+     * it — the caller no longer needs to manage invalidation manually.
      *
      * @param expire sets the time to live for the collections cache after data is gotten from database
+     * @param maxCacheSize if set and the result set exceeds this count, the cache write is skipped
+     *                     but the data is still returned.  Useful for collections too large to cache.
      */
     suspend fun <T : Model> getAll(
         collection: MongoCollection<T>,
         serializer: KSerializer<T>,
         expire: Duration? = null,
         cacheKey: String = collection.cacheKey(),
+        maxCacheSize: Int? = null,
         getData: suspend MongoCollection<T>.() -> List<T>,
     ): List<T> {
         if (!cacheEnabled())
             return getData(collection)
-        val cacheExists = (client.exists(cacheKey) ?: 0L) > 0L
-        return if (cacheExists) {
-            logger.info("CACHE HIT getAll $cacheKey")
-            streamLargeHash(cacheKey, serializer)
+
+        val isDefaultKey = cacheKey == collection.cacheKey()
+
+        if (isDefaultKey) {
+            // Standard per-document hash — each document is one hash field.
+            val cacheExists = (client.exists(cacheKey) ?: 0L) > 0L
+            return if (cacheExists) {
+                logger.info("CACHE HIT getAll $cacheKey")
+                streamLargeHash(cacheKey, serializer)
+            } else {
+                logger.info("CACHE MISS getAll $cacheKey")
+                val realData = getData(collection)
+                if (maxCacheSize == null || realData.size <= maxCacheSize) {
+                    setAll(collection, serializer, expire = expire, cacheKey = cacheKey, setData = { realData })
+                }
+                realData
+            }
         } else {
-            logger.info("CACHE MISS getAll $cacheKey")
-            val realData = getData(collection)
-            setAll(collection, serializer, expire = expire, cacheKey, setData = { realData })
-            realData
+            // Custom key → route through volatile hash so writes auto-invalidate it.
+            val volatileKey = collection.volatileCacheKey()
+            val cached = client.hget(volatileKey, cacheKey)
+            return if (cached != null) {
+                logger.info("CACHE HIT getAll $cacheKey (volatile)")
+                Json.decodeFromString(ListSerializer(serializer), cached)
+            } else {
+                logger.info("CACHE MISS getAll $cacheKey (volatile)")
+                val realData = getData(collection)
+                if (maxCacheSize == null || realData.size <= maxCacheSize) {
+                    client.hset(volatileKey, cacheKey, Json.encodeToString(ListSerializer(serializer), realData))
+                    logger.info("CACHE SET getAll $cacheKey (volatile)")
+                }
+                realData
+            }
         }
     }
 
@@ -138,12 +168,19 @@ class KacheController(
      * Insert or update a single item in your db and return it.
      * This will update the item in the cache by the id
      * @param expire sets the time to live for the collections cache after data is put in database
+     * @param fieldExpire per-document TTL applied via HEXPIRE (requires Redis 7.4+ and Lettuce 6.5+).
+     *                    Ignored silently when the server doesn't support it.
+     * @param invalidateVolatiles set to false when the write is known not to affect any volatile
+     *                            query results (e.g. updating a `lastSeen` timestamp when volatiles
+     *                            are status-count queries).
      */
     suspend fun <T : Model> set(
         collection: MongoCollection<T>,
         cacheKey: String = collection.cacheKey(),
         serializer: KSerializer<T>,
         expire: Duration? = null,
+        fieldExpire: Duration? = null,
+        invalidateVolatiles: Boolean = true,
         setData: suspend MongoCollection<T>.() -> T?,
     ): T? {
         if (!cacheEnabled()) return setData(collection)
@@ -152,8 +189,9 @@ class KacheController(
             val modelId = realData.id
             val response = client.hset(cacheKey, modelId, Json.encodeToString(serializer, realData))
             logger.info("CACHE SET set $cacheKey - newField:$response")
-            clearVolatile(collection)
+            if (invalidateVolatiles) clearVolatile(collection)
             expire?.let { client.expire(cacheKey, it) }
+            fieldExpire?.let { applyFieldExpire(cacheKey, listOf(modelId), it) }
             realData
         } else null
     }
@@ -178,17 +216,27 @@ class KacheController(
      *     }
      * ```
      * @param expire sets the time to live for the collections cache after data is gotten from database
+     * @param fieldExpire per-document TTL applied via HEXPIRE (requires Redis 7.4+ and Lettuce 6.5+).
+     *                    Ignored silently when the server doesn't support it.
+     * @param invalidateVolatiles set to false when the write is known not to affect any volatile
+     *                            query results.
+     * @param maxCacheSize if set and the data exceeds this count the cache write is skipped;
+     *                     the data is still written to the database and returned.
      */
     suspend fun <T : Model> setAll(
         collection: MongoCollection<T>,
         serializer: KSerializer<T>,
         expire: Duration? = null,
+        fieldExpire: Duration? = null,
+        invalidateVolatiles: Boolean = true,
+        maxCacheSize: Int? = null,
         cacheKey: String = collection.cacheKey(),
         setData: suspend MongoCollection<T>.() -> List<T>?,
     ): Boolean {
         if (!cacheEnabled()) return setData(collection) != null
         val realData = setData(collection) ?: return false
         val map = realData.associate { it.id to Json.encodeToString(serializer, it) }
+        if (maxCacheSize != null && realData.size > maxCacheSize) return true
         if (map.isNotEmpty()) {
             val response = client.hset(cacheKey, map)
             logger.info("CACHE SET setAll $cacheKey - $response")
@@ -198,7 +246,8 @@ class KacheController(
             logger.info("CACHE SET setAll $cacheKey - empty sentinel")
         }
         expire?.let { client.expire(cacheKey, it) }
-        clearVolatile(collection)
+        if (invalidateVolatiles) clearVolatile(collection)
+        fieldExpire?.let { applyFieldExpire(cacheKey, map.keys.toList(), it) }
         return true
     }
 
@@ -271,6 +320,21 @@ class KacheController(
         logger.info("CACHE CLEAR VOLATILE ${collection.volatileCacheKey()}")
     }
 
+    private var hexpireWarningLogged = false
+
+    @OptIn(ExperimentalLettuceCoroutinesApi::class)
+    private suspend fun applyFieldExpire(key: String, fields: List<String>, ttl: Duration) {
+        if (hexpireWarningLogged) return
+        try {
+            client.hexpire(key, ttl, *fields.toTypedArray())
+        } catch (e: Exception) {
+            if (!hexpireWarningLogged) {
+                hexpireWarningLogged = true
+                logger.warn("HEXPIRE not supported (Redis < 7.4 or Lettuce < 6.5), ignoring fieldExpire")
+            }
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Write-behind (fire-and-forget) — HIGH THROUGHPUT / NON-TRANSACTIONAL ONLY
     // -------------------------------------------------------------------------
@@ -310,6 +374,7 @@ class KacheController(
         collection: MongoCollection<T>,
         serializer: KSerializer<T>,
         expire: Duration? = null,
+        fieldExpire: Duration? = null,
         writeData: suspend MongoCollection<T>.(T) -> Unit,
     ) {
         check(writeQueue != null) {
@@ -321,6 +386,7 @@ class KacheController(
             logger.info("CACHE SET setAsync $cacheKey - ${item.id}")
             clearVolatile(collection)
             expire?.let { client.expire(cacheKey, it) }
+            fieldExpire?.let { applyFieldExpire(cacheKey, listOf(item.id), it) }
         }
         writeQueue.send { collection.writeData(item) }
     }
@@ -342,6 +408,7 @@ class KacheController(
         collection: MongoCollection<T>,
         serializer: KSerializer<T>,
         expire: Duration? = null,
+        fieldExpire: Duration? = null,
         writeData: suspend MongoCollection<T>.(List<T>) -> Unit,
     ) {
         check(writeQueue != null) {
@@ -358,13 +425,15 @@ class KacheController(
             logger.info("CACHE SET setAllAsync $cacheKey - ${items.size} items")
             expire?.let { client.expire(cacheKey, it) }
             clearVolatile(collection)
+            fieldExpire?.let { applyFieldExpire(cacheKey, map.keys.toList(), it) }
         }
         writeQueue.send { collection.writeData(items) }
     }
 
     /**
-     * Delete an item from your db, if that was successful return [true] or [false]
-     * if [true] the item is also deleted from the cache
+     * Delete an item from your db, if that was successful return [true] or [false].
+     * If [true] the item is removed from the cache and volatiles for the collection
+     * are cleared, since query results (counts, pages) may now be stale.
      */
     suspend fun <T : Model> remove(
         id: String, collection: MongoCollection<T>, deleteData: suspend MongoCollection<T>.() -> Boolean,
@@ -375,22 +444,23 @@ class KacheController(
         return if (deleteData(collection)) {
             val response = client.hdel(cacheKey, id)
             logger.info("CACHE DROP remove $cacheKey - $response")
+            clearVolatile(collection)
             true
         } else
             false
     }
 
     /**
-     * Delete all the items in a collection, if that was successful return [true] or [false]
-     * if [true] all the items in the cache will also be deleted
-     * e.g
+     * Delete all the items in a collection, if that was successful return [true] or [false].
+     * If [true] the entire collection hash is dropped atomically and volatiles are cleared.
+     *
      * ```kotlin
-     *kacheController.removeAll(collection) {
-     *    collection.deleteMany(Filters.empty()).deletedCount > 0
-     *}
+     * kacheController.removeAll(collection) {
+     *     collection.deleteMany(Filters.empty()).deletedCount > 0
+     * }
      * ```
-     * ensure that you use the delete count instead of `wasAcknowledged()` because that will still be true when
-     * no items are deleted
+     * Use `deletedCount > 0` rather than `wasAcknowledged()` — the latter returns true
+     * even when nothing was deleted, which would incorrectly drop the cache.
      */
     suspend fun <T : Model> removeAll(
         collection: MongoCollection<T>,
@@ -400,11 +470,9 @@ class KacheController(
         if (!cacheEnabled())
             return deleteData(collection)
         return if (deleteData(collection)) {
-            val fields = client.hkeys(cacheKey).toList().toTypedArray()
-            if (fields.isNotEmpty()) {
-                val response = client.hdel(cacheKey, *fields)
-                logger.info("CACHE SET removeAll $cacheKey - $response")
-            }
+            client.del(cacheKey)
+            logger.info("CACHE DROP removeAll $cacheKey")
+            clearVolatile(collection)
             true
         } else
             false

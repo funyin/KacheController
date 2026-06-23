@@ -32,11 +32,23 @@ kotlin {
             dependencies {
                 implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.1")
                 implementation("org.mongodb:bson-kotlinx:4.11.1")
-                implementation("io.lettuce:lettuce-core:6.3.0.RELEASE")
+                implementation("io.lettuce:lettuce-core:6.5.0.RELEASE")
                 implementation("ch.qos.logback:logback-classic:1.4.4")
             }
         }
+        val jvmTest by getting {
+            dependencies {
+                implementation(kotlin("test-junit5"))
+                implementation("io.mockk:mockk:1.13.8")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+                runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+            }
+        }
     }
+}
+
+tasks.named<Test>("jvmTest") {
+    useJUnitPlatform()
 }
 
 group = "com.funyinkash"
