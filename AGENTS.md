@@ -13,7 +13,7 @@ Multi-module Kotlin (JVM) library providing a pluggable read-through/write-throu
 | `kachecontroller-cache-memory` | `kachecontroller-cache-memory` | In-memory `CacheClient` (no external deps) |
 | `kachecontroller-cache-sqlite` | `kachecontroller-cache-sqlite` | SQLite `CacheClient` via sqlite-jdbc |
 | `kachecontroller-mongo` | `kachecontroller-mongo` | `MongoKacheController` — MongoDB adapter |
-| `kachecontroller-postgres` | `kachecontroller-postgres` | `PostgresKacheController` — Exposed-based PostgreSQL |
+| `kachecontroller-exposed` | `kachecontroller-exposed` | `ExposedKacheController` — any Exposed-compatible DB |
 | `example` | — | Demo app (needs local MongoDB:27017 + Redis:6379) |
 
 ## Commands
@@ -25,7 +25,7 @@ Multi-module Kotlin (JVM) library providing a pluggable read-through/write-throu
 ./gradlew :kachecontroller-cache-sqlite:jvmTest                    # SQLite cache tests
 ./gradlew :kachecontroller-cache-redis:jvmTest                     # Redis cache tests (MockK)
 ./gradlew :kachecontroller-mongo:jvmTest                           # Mongo adapter tests (37)
-./gradlew :kachecontroller-postgres:jvmTest                        # Postgres adapter tests (MockK)
+./gradlew :kachecontroller-exposed:jvmTest                        # Exposed adapter tests (MockK)
 ./gradlew :example:run                                             # run demo (needs DBs locally)
 ./gradlew dokkaHtmlMultiModule                                     # build docs → docs/
 ```

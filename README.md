@@ -14,7 +14,7 @@ Swap any cache backend with any database adapter — no boilerplate.
 | `kachecontroller-cache-memory` | `kachecontroller-cache-memory` | In-memory `CacheClient` (no external deps) |
 | `kachecontroller-cache-sqlite` | `kachecontroller-cache-sqlite` | SQLite `CacheClient` via sqlite-jdbc |
 | `kachecontroller-mongo` | `kachecontroller-mongo` | `MongoKacheController` — MongoDB adapter |
-| `kachecontroller-postgres` | `kachecontroller-postgres` | `PostgresKacheController` — Exposed-based PostgreSQL |
+| `kachecontroller-exposed` | `kachecontroller-exposed` | `ExposedKacheController` — any Exposed-compatible DB |
 
 ### Usage
 
@@ -24,11 +24,11 @@ Pick one **cache** and one **database** adapter:
 // Cache backends
 val memCache: CacheClient = InMemoryCacheClient()
 val sqliteCache: CacheClient = SQLiteCacheClient.create("jdbc:sqlite:kache.db")
-val redisCache: CacheClient = RedisCacheClient.create("redis://localhost:6379")
+val redisCache: CacheClient = RedisCacheClient("redis://localhost:6379")
 
 // Database adapters
 val mongoCtrl = MongoKacheController(cache = redisCache)
-val pgCtrl    = PostgresKacheController(cache = redisCache)
+val pgCtrl    = ExposedKacheController(cache = redisCache)
 ```
 
 Your models implement `Model` (`val id: String`) and use `kotlinx-serialization`:

@@ -25,15 +25,15 @@ suspend fun main(args: Array<String>) {
     // val cache: CacheClient = SQLiteCacheClient.create("jdbc:sqlite:kache.db")
     //
     // Redis (shared, multi-process — requires local Redis on :6379):
-    val cache: CacheClient = RedisCacheClient.create("redis://127.0.0.1:6379")
+    val cache: CacheClient = RedisCacheClient("redis://127.0.0.1:6379")
 
     // ── Database adapter variants ───────────────────────────────────────
     //
     // MongoDB (requires local MongoDB on :27017):
     //   MongoKacheController(cache = cache)
     //
-    // PostgreSQL via Exposed (requires local Postgres + Exposed setup):
-    //   PostgresKacheController(cache = cache)
+    // Any Exposed-compatible database (PostgreSQL, MySQL, H2, SQLite, etc.):
+    //   ExposedKacheController(cache = cache)
     //
     // Example below uses MongoDB + Redis:
 

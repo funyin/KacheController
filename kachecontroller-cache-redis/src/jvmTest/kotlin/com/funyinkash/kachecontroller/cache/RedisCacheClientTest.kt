@@ -21,7 +21,9 @@ class RedisCacheClientTest {
     @BeforeEach
     fun setUp() {
         clearMocks(commands)
-        client = RedisCacheClient(commands)
+        client = RedisCacheClient("redis://localhost").apply {
+            commandsProvider = { commands }
+        }
     }
 
     private fun scanPage(

@@ -6,12 +6,13 @@ import org.jetbrains.exposed.sql.Table
 import java.time.Duration
 
 /**
- * PostgreSQL adapter providing a typed public API over [KacheController].
+ * Exposed-based adapter providing a typed public API over [KacheController].
  *
+ * Works with any database Exposed supports (PostgreSQL, MySQL, H2, SQLite, etc.).
  * Each method delegates to [KacheController]'s internal helpers, deriving cache keys
  * from the [Table] schema and table names.
  */
-class PostgresKacheController(
+class ExposedKacheController(
     cacheEnabled: () -> Boolean = { true },
     cache: CacheClient,
     asyncWriteScope: CoroutineScope? = null,

@@ -19,10 +19,10 @@ object TestTable : Table("test_users") {
     val name = varchar("name", 100)
 }
 
-class PostgresKacheControllerTest {
+class ExposedKacheControllerTest {
 
     private val cache = mockk<CacheClient>(relaxed = true)
-    private val controller = PostgresKacheController(cache = cache)
+    private val controller = ExposedKacheController(cache = cache)
 
     @Test
     fun `get delegates with correct keys`() = runTest {
@@ -144,7 +144,7 @@ class PostgresKacheControllerTest {
 
     @Test
     fun `cache disabled skips all cache operations`() = runTest {
-        val disabled = PostgresKacheController(cacheEnabled = { false }, cache = cache)
+        val disabled = ExposedKacheController(cacheEnabled = { false }, cache = cache)
 
         disabled.get(USER_1.id, TestTable, User.serializer()) { USER_1 }
 

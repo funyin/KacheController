@@ -13,13 +13,26 @@ import kotlin.time.Duration as KotlinDuration
 /**
  * Redis-backed [CacheClient] via the Lettuce coroutines API.
  *
+ * The Redis connection is established lazily — the first command to execute
+ * triggers [RedisClient.connect]. This means you can construct an instance
+ * up front without requiring Redis to be running.
+ *
  * Supports TTL via [expire] and per-field TTL via [hexpire] (Redis 7.4+).
  * When hexpire is not supported a one-time warning is logged and the call is silently ignored.
+ *
+ * @param uri  Redis connection URI (e.g. `redis://localhost:6379`).
  */
 @OptIn(ExperimentalLettuceCoroutinesApi::class)
-class RedisCacheClient(private val commands: RedisCoroutinesCommands<String, String>) : CacheClient {
+class RedisCacheClient(uri: String) : CacheClient {
 
     private val logger = LoggerFactory.getLogger("RedisCacheClient")
+
+    /** Overridable commands provider — used internally for lazy connect, exposed for tests. */
+    @PublishedApi internal var commandsProvider: () -> RedisCoroutinesCommands<String, String> = {
+        RedisClient.create(uri).connect().coroutines()
+    }
+
+    private val commands by lazy { commandsProvider() }
 
     override suspend fun hget(key: String, field: String): String? = commands.hget(key, field)
 
@@ -70,12 +83,4 @@ class RedisCacheClient(private val commands: RedisCoroutinesCommands<String, Str
         }
     }
 
-    companion object {
-        /** Create an instance connected to the given Redis URI (e.g. `redis://localhost:6379`). */
-        @OptIn(ExperimentalLettuceCoroutinesApi::class)
-        fun create(uri: String): RedisCacheClient {
-            val client = RedisClient.create(uri)
-            return RedisCacheClient(client.connect().coroutines())
-        }
-    }
 }

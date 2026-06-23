@@ -15,7 +15,7 @@ import kotlin.time.toKotlinDuration
  * Abstract base class implementing read-through/write-through caching logic.
  *
  * Subclasses provide the typed public API for a specific database backend
- * (e.g. [MongoKacheController], [PostgresKacheController]).
+ * (e.g. [MongoKacheController], [ExposedKacheController]).
  *
  * @param cacheEnabled  Called before every operation; when `false` the cache is bypassed.
  * @param cache         The [CacheClient] backend (Redis, in-memory, SQLite, etc.).

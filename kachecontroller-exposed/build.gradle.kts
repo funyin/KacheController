@@ -55,20 +55,20 @@ publishing {
     publications.withType<MavenPublication>().configureEach {
         val pubName = name
         artifactId = when (pubName) {
-            "kotlinMultiplatform" -> "kachecontroller-postgres"
-            else -> "kachecontroller-postgres-$pubName"
+            "kotlinMultiplatform" -> "kachecontroller-exposed"
+            else -> "kachecontroller-exposed-$pubName"
         }
         val javadocJar = tasks.register<Jar>("${pubName}JavadocJar") {
             dependsOn(tasks.dokkaHtmlPartial)
             archiveClassifier.set("javadoc")
             archiveAppendix.set(pubName)
-            from("../docs/kachecontroller-postgres")
+            from("../docs/kachecontroller-exposed")
         }
         artifact(javadocJar)
         pom {
-            name.set("KacheController PostgreSQL")
-            description.set("PostgreSQL database adapter for KacheController (Exposed)")
-            url.set("https://funyin.github.io/KacheController/kachecontroller-postgres/index.html")
+            name.set("KacheController Exposed")
+            description.set("Exposed database adapter for KacheController")
+            url.set("https://funyin.github.io/KacheController/kachecontroller-exposed/index.html")
             issueManagement {
                 system.set("Github")
                 url.set("https://github.com/funyin/KacheController/issues")
