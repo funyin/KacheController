@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="kachecontroller-cache-sqlite-jvm-1.0.6">
+    <output-path>$PROJECT_DIR$/kachecontroller-cache-sqlite/build/libs</output-path>
+    <root id="archive" name="kachecontroller-cache-sqlite-jvm-1.0.6.jar">
+      <element id="module-output" name="KacheController.kachecontroller-cache-sqlite.jvmMain" />
+    </root>
+  </artifact>
+</component>

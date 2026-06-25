@@ -43,3 +43,8 @@ bin/
 secring.gpg
 secret-key.ascii
 local.properties
+
+### Docs ###
+venv
+.cache
+site/

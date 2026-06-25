@@ -1,10 +1,10 @@
 import java.util.Properties
+import org.gradle.plugins.signing.SigningExtension
 
 plugins {
     kotlin("multiplatform")
     id("org.jetbrains.dokka")
     `maven-publish`
-    signing
     id("com.gradleup.nmcp") version "0.0.9"
 }
 
@@ -106,7 +106,8 @@ val signingKeyFilePath = localProperties.getProperty("signing.secretKeyFile")
 if (!signingKeyFilePath.isNullOrBlank()) {
     val signingKeyFile = rootProject.file(signingKeyFilePath)
     if (signingKeyFile.exists()) {
-        signing {
+        apply(plugin = "signing")
+        configure<SigningExtension> {
             useInMemoryPgpKeys(
                 signingKeyFile.readText(),
                 localProperties.getProperty("signing.password") ?: "",

@@ -14,8 +14,8 @@
             <option value="$PROJECT_DIR$/kachecontroller-cache-redis" />
             <option value="$PROJECT_DIR$/kachecontroller-cache-sqlite" />
             <option value="$PROJECT_DIR$/kachecontroller-core" />
+            <option value="$PROJECT_DIR$/kachecontroller-exposed" />
             <option value="$PROJECT_DIR$/kachecontroller-mongo" />
-            <option value="$PROJECT_DIR$/kachecontroller-postgres" />
           </set>
         </option>
       </GradleProjectSettings>

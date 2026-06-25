@@ -37,12 +37,12 @@ suspend fun main(args: Array<String>) {
     //
     // Example below uses MongoDB + Redis:
 
-    val mongoClient = MongoClient.create("mongodb://localhost:27017")
     val controller = MongoKacheController(
         cacheEnabled = { true },
         cache = cache,
     )
 
+    val mongoClient = MongoClient.create("mongodb://localhost:27017")
     val db = mongoClient.getDatabase("kacheController")
     val usersCollection = db.getCollection<User>("users")
     val users = listOf(
