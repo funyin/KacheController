@@ -27,45 +27,87 @@ val cache: CacheClient = SQLiteCacheClient.create("jdbc:sqlite:kache.db")
 
 ## 3. Create a controller
 
-```kotlin
-// MongoDB
-val controller = MongoKacheController(cache = cache)
+=== "MongoDB"
 
-// Any Exposed-compatible database
-val controller = ExposedKacheController(cache = cache)
-```
+    ```kotlin
+    val controller = MongoKacheController(cache = cache)
+    ```
+
+=== "Exposed"
+
+    ```kotlin
+    val controller = ExposedKacheController(cache = cache)
+    ```
 
 ## 4. Use the controller
 
-```kotlin
-val db = mongoClient.getDatabase("myApp")
-val users = db.getCollection<User>("users")
+=== "MongoDB"
 
-// write-through set
-controller.set(users, User.serializer()) {
-    findOneAndUpdate(filter, update)
-}
+    ```kotlin
+    val db = mongoClient.getDatabase("myApp")
+    val users = db.getCollection<User>("users")
 
-// read-through get
-val user = controller.get(id, users, User.serializer()) {
-    find(Filters.eq("_id", id)).firstOrNull()
-}
+    // write-through set
+    controller.set(users, User.serializer()) {
+        findOneAndUpdate(filter, update)
+    }
 
-// bulk write-through
-controller.setAll(users, User.serializer()) {
-    if (insertMany(newUsers).wasAcknowledged()) newUsers else emptyList()
-}
+    // read-through get
+    val user = controller.get(id, users, User.serializer()) {
+        find(Filters.eq("_id", id)).firstOrNull()
+    }
 
-// bulk read-through
-val allUsers = controller.getAll(users, User.serializer()) {
-    find().toList()
-}
+    // bulk write-through
+    controller.setAll(users, User.serializer()) {
+        if (insertMany(newUsers).wasAcknowledged()) newUsers else emptyList()
+    }
 
-// delete and evict
-controller.remove(id, users) {
-    deleteOne(Filters.eq("_id", id)).wasAcknowledged()
-}
-```
+    // bulk read-through
+    val allUsers = controller.getAll(users, User.serializer()) {
+        find().toList()
+    }
+
+    // delete and evict
+    controller.remove(id, users) {
+        deleteOne(Filters.eq("_id", id)).wasAcknowledged()
+    }
+    ```
+
+=== "Exposed"
+
+    ```kotlin
+    val user = controller.get(id, UsersTable, User.serializer()) {
+        select { UsersTable.id eq id }.singleOrNull()?.toUser()
+    }
+
+    // write-through upsert
+    controller.set(UsersTable, User.serializer()) {
+        upsert {
+            it[UsersTable.firstName] = newUser.firstName
+            it[UsersTable.lastName] = newUser.lastName
+        }
+        newUser
+    }
+
+    // bulk write-through
+    controller.setAll(UsersTable, User.serializer()) {
+        batchInsert(newUsers) { u ->
+            this[UsersTable.id] = u.id
+            this[UsersTable.firstName] = u.firstName
+            this[UsersTable.lastName] = u.lastName
+        }.map { it.toUser() }
+    }
+
+    // bulk read-through
+    val allUsers = controller.getAll(UsersTable, User.serializer()) {
+        selectAll().map { it.toUser() }
+    }
+
+    // delete and evict
+    controller.remove(id, UsersTable) {
+        deleteWhere { UsersTable.id eq id } > 0
+    }
+    ```
 
 !!! tip
     See the [example module](https://github.com/funyin/KacheController/tree/master/example) for a complete runnable demo with MongoDB and Redis.

@@ -52,6 +52,7 @@ nav:
     - Delete: operations/delete.md
     - Write-Behind: operations/write_behind.md
   - Keys & Volatiles: keys_and_volatiles.md
+  - How It Works: how_it_works.md
   - Why KacheController: why_how.md
   - Examples: examples/index.md
   - KDoc: https://funyin.github.io/KacheController/kdoc/KDOC_VERSION/

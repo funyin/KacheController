@@ -62,6 +62,17 @@ jobs:
           mike deploy --push --update-aliases "$VERSION" latest
           mike set-default --push latest
 
+      - name: Create GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION#v}"
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --generate-notes \
+            --verify-tag || echo "Release already exists, skipping"
+
       - name: Deploy versioned KDoc to gh-pages
         run: |
           VERSION="${{ github.event.inputs.version || github.ref_name }}"
