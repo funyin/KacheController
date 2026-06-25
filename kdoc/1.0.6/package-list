@@ -1,0 +1,15 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+
+module:kachecontroller-cache-memory
+com.funyinkash.kachecontroller.cache
+module:kachecontroller-cache-redis
+com.funyinkash.kachecontroller.cache
+module:kachecontroller-cache-sqlite
+com.funyinkash.kachecontroller.cache
+module:kachecontroller-core
+com.funyinkash.kachecontroller
+module:kachecontroller-exposed
+com.funyinkash.kachecontroller
+module:kachecontroller-mongo
+com.funyinkash.kachecontroller
